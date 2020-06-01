@@ -24,8 +24,6 @@ stages:
 
 - stage: build
   displayName: Build & Push
-  variables:
-
   jobs:
 
   - job: Application
