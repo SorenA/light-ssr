@@ -1,6 +1,6 @@
 variables:
   vmImage: 'ubuntu-18.04'
-  majorVersion: 0
+  majorVersion: 1
   minorVersion: 0
   containerRegistry: 'Container Registry - Release'
   imageName: sorena/light-ssr
