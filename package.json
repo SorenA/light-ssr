@@ -7,7 +7,8 @@
   "main": "src/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "dev": "node --require dotenv/config dist/index.js"
   },
   "dependencies": {
     "puppeteer": "3.2.0",
