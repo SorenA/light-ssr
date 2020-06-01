@@ -5,11 +5,13 @@ variables:
   containerRegistry: 'Container Registry - Release'
   imageName: sorena/light-ssr
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-    buildName: $(majorVersion).$(minorVersion)$(Rev:.r)
+    buildPrefix: ''
+    buildSuffix: ''
   ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
-    buildName: release-$(majorVersion).$(minorVersion)$(Rev:.r)-$(SourceBranchName)
+    buildPrefix: release-
+    buildSuffix: -${{ variables['Build.SourceBranchName'] }}
 
-name: $(buildName)
+name: $(buildPrefix)$(majorVersion).$(minorVersion)$(Rev:.r)$(buildSuffix)
 
 trigger:
   branches:
@@ -35,6 +37,6 @@ stages:
         inputs:
           containerRegistry: $(containerRegistry)
           repository: $(imageName)
-          tags: $(buildName)
+          tags: $(Build.BuildNumber)
           command: buildAndPush
           Dockerfile: Dockerfile
