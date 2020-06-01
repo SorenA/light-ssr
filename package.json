@@ -1,0 +1,20 @@
+{
+  "name": "light-ssr",
+  "description": "Server side rendering using headless Chrome and Puppeteer.",
+  "homepage": "https://github.com/SorenA/light-ssr",
+  "repository": "github:SorenA/light-ssr",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "puppeteer": "3.2.0"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "3.0.0",
+    "typescript": "3.9.3",
+    "tslint": "6.1.2",
+    "dotenv": "8.2.0"
+  }
+}

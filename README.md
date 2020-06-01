@@ -1,2 +1,3 @@
-# light-ssr
-Server side rendering using headless Chrome and Puppeteer
+# Light SSR
+
+Server side rendering using headless Chrome and Puppeteer.
