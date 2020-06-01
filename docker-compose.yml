@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  light-ssr:
+    build: .
+    ports:
+    - 3000:3000
+    environment:
+    - RENDER_ORIGIN_WHITELIST=example.com,example.org

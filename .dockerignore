@@ -1,0 +1,13 @@
+.dockerignore
+Dockerfile
+
+.gitignore
+.git
+
+azure-pipelines.yml
+.editorconfig
+k8s
+node_modules
+dist
+.env
+.env.example
