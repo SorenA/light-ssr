@@ -1,0 +1,42 @@
+variables:
+  vmImage: 'ubuntu-18.04'
+  majorVersion: 0
+  minorVersion: 0
+  containerRegistry: 'Container Registry - Release'
+  imageName: sorena/light-ssr
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+    buildName: $(majorVersion).$(minorVersion)$(Rev:.r)
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/release/') }}:
+    buildName: release-$(majorVersion).$(minorVersion)$(Rev:.r)-$(SourceBranchName)
+
+name: $(buildName)
+
+trigger:
+  branches:
+    include:
+    - master
+    - release/*
+  paths:
+    exclude:
+    - README.md
+
+stages:
+
+- stage: build
+  displayName: Build & Push
+  variables:
+
+  jobs:
+
+  - job: Application
+    pool:
+      vmImage: $(vmImage)
+    steps:
+      - task: Docker@2
+        displayName: Build & push image
+        inputs:
+          containerRegistry: $(containerRegistry)
+          repository: $(imageName)
+          tags: $(buildName)
+          command: buildAndPush
+          Dockerfile: Dockerfile
