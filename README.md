@@ -41,13 +41,17 @@ Defaults for environment variables:
 
 ```env
 RENDER_TIMEOUT=10000
-RENDER_HEIGHT=1024
-RENDER_WIDTH=1280
+RENDER_HEIGHT=1920
+RENDER_WIDTH=1080
+RENDER_QUERY_STRING_APPEND_SSR=true
 RENDER_ORIGIN_WHITELIST=
 ```
 
-`RENDER_TIMEOUT` is render timeout in milliseconds.
+`RENDER_TIMEOUT` is render timeout in milliseconds.  
+`RENDER_QUERY_STRING_APPEND_SSR` is whether to append the `ssr=true` parameter to the query string.
 `RENDER_ORIGIN_WHITELIST` should be provided as CSV.
+
+Origin port is required if targeting non-standard ports such as http other than port 80 and https other than port 443.
 
 ## Response parsing
 

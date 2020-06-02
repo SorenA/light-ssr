@@ -18,11 +18,11 @@ spec:
         app: light-ssr-split
     spec:
       containers:
-      - image: sorena/light-ssr:1.0.3
+      - image: sorena/light-ssr:1.0.4
         name: light-ssr-split
         env:
         - name: RENDER_ORIGIN_WHITELIST
-          value: "example.com,example.org"
+          value: "example.com,example.org,light-ssr-split.demo.thyme.lightops.dk"
         # Define liveness probe, pod is restarted if failed
         livenessProbe:
           httpGet:

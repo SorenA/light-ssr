@@ -18,7 +18,7 @@ spec:
         app: light-ssr
     spec:
       containers:
-      - image: sorena/light-ssr:1.0.3
+      - image: sorena/light-ssr:1.0.4
         name: light-ssr
         env:
         - name: RENDER_ORIGIN_WHITELIST

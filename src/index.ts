@@ -9,8 +9,9 @@ import { RenderWorker } from './render-worker';
  * Configuration - Render
  */
 const renderTimeout = +(process.env.RENDER_TIMEOUT || 10000);
-const renderHeight = +(process.env.RENDER_HEIGHT || 1024);
-const renderWidth = +(process.env.RENDER_WIDTH || 1280);
+const renderHeight = +(process.env.RENDER_HEIGHT || 1920);
+const renderWidth = +(process.env.RENDER_WIDTH || 1080);
+const renderQueryStringAppendSsr = 'RENDER_QUERY_STRING_APPEND_SSR' in process.env ? process.env.RENDER_QUERY_STRING_APPEND_SSR == 'true' : true;
 const renderOriginWhitelist = (process.env.RENDER_ORIGIN_WHITELIST || '').split(',');
 
 const koaHostname = '0.0.0.0';
@@ -34,7 +35,7 @@ process.on('unhandledRejection', (error: Error) => {
 /**
  * Render Worker
  */
-const renderWorker = new RenderWorker(renderTimeout, renderHeight, renderWidth);
+const renderWorker = new RenderWorker(renderTimeout, renderHeight, renderWidth, renderQueryStringAppendSsr);
 renderWorker.initialize();
 
 /**
@@ -90,6 +91,7 @@ app.use(KoaRoute.get('/render', async (ctx: Koa.Context) => {
     // Origin not whitelisted
     ctx.status = 400;
     ctx.body = 'Origin not allowed.';
+    console.log(`Request rejected: Origin not allowed: ${parsedUrl.host}`);
     return;
   }
 

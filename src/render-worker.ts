@@ -6,21 +6,63 @@ export class RenderWorker {
   private timeout: number;
   private height: number;
   private width: number;
+  private queryStringAppendSsr: boolean;
   private puppeteerArg: string[] = [
     '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--disable-gpu',
+    '--window-size=1920x1080',
+  ];
+  private blockedResourceTypes: string[] = [
+    'beacon',
+    'csp_report',
+    'font',
+    'image',
+    'imageset',
+    'media',
+    'object',
+    'texttrack',
+  ];
+  private blockedResourcesUrlFragments: string[] = [
+    'adition',
+    'adzerk',
+    'analytics',
+    'cdn.api.twitter',
+    'clicksor',
+    'clicktale',
+    'cookiebot',
+    'doubleclick',
+    'exelator',
+    'facebook',
+    'fontawesome',
+    'google-analytics',
+    'google',
+    'googletagmanager',
+    'mixpanel',
+    'optimizely',
+    'quantserve',
+    'sharethrough',
+    'tiqcdn',
+    'zedo',
   ];
 
   private puppeteerBrowser: Puppeteer.Browser | null = null;
+  private puppeteerBrowserStartTimestamp: number = 0;
+  private puppeteerBrowserLifetime: number = 300; // 5 minutes
 
   /**
    * @param timeout Render timeout in milliseconds
    * @param height Render screen height
-   * @param width  Render screen width
+   * @param width Render screen width
+   * @param queryStringAppendSsr Append ssr=true to query string
    */
-  constructor(timeout: number, height: number, width: number) {
+  constructor(timeout: number, height: number, width: number, queryStringAppendSsr: boolean) {
     this.timeout = timeout;
     this.height = height;
     this.width = width;
+    this.queryStringAppendSsr = queryStringAppendSsr;
   }
 
   public isReady(): boolean {
@@ -46,10 +88,12 @@ export class RenderWorker {
 
     const parsedUrl = new URL(url);
 
-    // Append SSR to query string to allow origin to differ response for rendering
-    url += url.indexOf('?') === -1
-    ? '?ssr=true'
-    : '&ssr=true';
+    if (this.queryStringAppendSsr) {
+      // Append SSR to query string to allow origin to differ response for rendering
+      url += url.indexOf('?') === -1
+        ? '?ssr=true'
+        : '&ssr=true';
+    }
 
     // Open new page and set viewport
     const puppeteerPage = await this.puppeteerBrowser.newPage();
@@ -59,12 +103,34 @@ export class RenderWorker {
       isMobile,
     });
 
+    // Intercept and block resources
+    await puppeteerPage.setRequestInterception(true);
+    puppeteerPage.on('request', request => {
+      // Check resource type
+      if (this.blockedResourceTypes.indexOf(request.resourceType()) !== -1) {
+        // Blocked resource type
+        request.abort();
+        return;
+      }
+
+      // Check url based resources
+      const requestUrl = request.url().substring(0).split('?')[0].split('#')[0];
+      if (this.blockedResourcesUrlFragments.some(urlFragment => requestUrl.indexOf(urlFragment) !== -1)) {
+        // Blocked resource url fragment
+        request.abort();
+        return;
+      }
+
+      // Continue loading
+      request.continue();
+    });
+
     // Render page
     let puppeteerResponse: Puppeteer.Response | null = null;
     try {
       puppeteerResponse = await puppeteerPage.goto(url, {
         timeout: this.timeout,
-        waitUntil: 'networkidle0',
+        waitUntil: 'networkidle2',
       });
     } catch (ex) {
       console.error(ex);
@@ -131,6 +197,15 @@ export class RenderWorker {
     const content = await puppeteerPage.content();
     await puppeteerPage.close();
 
+    // Check for browser reboot time
+    const timestamp = new Date().getTime() / 1000;
+    if ((timestamp - this.puppeteerBrowserStartTimestamp) > this.puppeteerBrowserLifetime) {
+      // Close browser, will be reopened by the disconnected event
+      await this.puppeteerBrowser.close();
+
+      console.log(`Chrome closed`);
+    }
+
     return {
       statusCode,
       headers,
@@ -143,6 +218,9 @@ export class RenderWorker {
    */
   private async startBrowser(): Promise<void> {
     this.puppeteerBrowser = await Puppeteer.launch({ args: this.puppeteerArg });
+    this.puppeteerBrowserStartTimestamp = new Date().getTime() / 1000;
+
+    console.log(`Chrome launched`);
 
     // Restart on browser closed
     this.puppeteerBrowser.on('disconnected', () => {
