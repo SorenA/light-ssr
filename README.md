@@ -4,6 +4,35 @@ Server side rendering using headless Chrome and Puppeteer.
 
 Inspired by [Rendertron](https://github.com/GoogleChrome/rendertron).
 
+## Render endpoint
+
+The render endpoint is located at `/render`, and takes the request url either from query string or request headers.
+
+### Headers
+
+The supported request headers are:
+
+```env
+X-Forwarded-Host: example.com
+X-Forwarded-Port: 80
+X-Forwarded-Proto: http
+X-Replaced-Path: /about-us
+```
+
+Which would result in a render of `http://example.com:80/about-us`.
+
+A matching Traefik ingress route example is located in the `k8s` directory.
+
+### Query string
+
+The request url may be set using the following query string: `?url=http://example.com/about-us`
+
+If both headers and query string options are provided, the query string will be used.
+
+## Health endpoint
+
+A health endpoint is located at `/health`
+
 ## Configuration
 
 Configuration is done through environment variables, in development the .env file can be used.
@@ -42,7 +71,6 @@ Due to the security issues created by allowing an open proxy into ones network, 
 
 All requests not matching the whitelist are rejected.
 
-
 ## Development
 
 Create an environment file from the default one:
@@ -60,3 +88,4 @@ Run local version using `npm run dev`.
 - [dotenv](https://github.com/motdotla/dotenv)
 - [Puppeteer](https://github.com/puppeteer/puppeteer)
 - [Koa](https://github.com/koajs/koa)
+

@@ -62,11 +62,27 @@ app.use(KoaRoute.get('/render', async (ctx: Koa.Context) => {
     throw new Error('Render worker not ready yet.');
   }
 
-  if (!('url' in ctx.query)) {
-    throw new Error('No url provided.');
+  let url: string | null = null;
+  if ('x-forwarded-host' in ctx.headers) {
+    // Read from proxy headers
+    const host = ctx.headers['x-forwarded-host'];
+    const protocol = ctx.headers['x-forwarded-proto'] || 'https';
+    const port = ctx.headers['x-forwarded-port'] || '80';
+    const path = ctx.headers['x-replaced-path'] || '/';
+    url = `${protocol}://${host}:${port}${path}`;
   }
 
-  const url = ctx.query.url;
+  if ('url' in ctx.query) {
+    // Read from querystring
+    url = ctx.query.url;
+  }
+
+  if (url === null) {
+    ctx.status = 400;
+    ctx.body = 'No url provided.';
+    return;
+  }
+
   const isMobile = 'mobile' in ctx.query ? true : false;
 
   const parsedUrl = new URL(url);

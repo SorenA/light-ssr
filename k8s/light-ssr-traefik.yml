@@ -1,3 +1,6 @@
+###
+# Host the SSR service and route all traffic from domain.
+###
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -15,7 +18,7 @@ spec:
         app: light-ssr
     spec:
       containers:
-      - image: sorena/light-ssr:1.0.1
+      - image: sorena/light-ssr:1.0.3
         name: light-ssr
         env:
         - name: RENDER_ORIGIN_WHITELIST
