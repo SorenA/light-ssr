@@ -2,6 +2,8 @@
 
 Server side rendering using headless Chrome and Puppeteer.
 
+Prebuilt images on [DockerHub](https://hub.docker.com/r/sorena/light-ssr).
+
 Inspired by [Rendertron](https://github.com/GoogleChrome/rendertron).
 
 ## Render endpoint
