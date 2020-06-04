@@ -49,8 +49,6 @@ export class RenderWorker {
   ];
 
   private puppeteerBrowser: Puppeteer.Browser | null = null;
-  private puppeteerBrowserStartTimestamp: number = 0;
-  private puppeteerBrowserLifetime: number = 300; // 5 minutes
 
   /**
    * @param timeout Render timeout in milliseconds
@@ -197,15 +195,6 @@ export class RenderWorker {
     const content = await puppeteerPage.content();
     await puppeteerPage.close();
 
-    // Check for browser reboot time
-    const timestamp = new Date().getTime() / 1000;
-    if ((timestamp - this.puppeteerBrowserStartTimestamp) > this.puppeteerBrowserLifetime) {
-      // Close browser, will be reopened by the disconnected event
-      await this.puppeteerBrowser.close();
-
-      console.log(`Chrome closed`);
-    }
-
     return {
       statusCode,
       headers,
@@ -214,13 +203,27 @@ export class RenderWorker {
   }
 
   /**
+   * Recycle Puppeteer browser
+   */
+  public async recycleBrowser(): Promise<void> {
+    if (this.puppeteerBrowser === null) {
+      // No browser open
+      return;
+    }
+
+    // Close browser, will be reopened by the disconnected event
+    await this.puppeteerBrowser.close();
+
+    console.log(`Browser recycled`);
+  }
+
+  /**
    * Start Puppeteer browser
    */
   private async startBrowser(): Promise<void> {
     this.puppeteerBrowser = await Puppeteer.launch({ args: this.puppeteerArg });
-    this.puppeteerBrowserStartTimestamp = new Date().getTime() / 1000;
 
-    console.log(`Chrome launched`);
+    console.log(`Browser launched`);
 
     // Restart on browser closed
     this.puppeteerBrowser.on('disconnected', () => {

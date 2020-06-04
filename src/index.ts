@@ -38,6 +38,20 @@ process.on('unhandledRejection', (error: Error) => {
 const renderWorker = new RenderWorker(renderTimeout, renderHeight, renderWidth, renderQueryStringAppendSsr);
 renderWorker.initialize();
 
+// Start browser processes recyling timer
+let lastRenderRequestTimestamp: Date = new Date();
+setInterval(async () => {
+  // Check if last request came over 30 seconds ago
+  const thresMs = 30*1000; // 30 seconds
+  if (new Date().getTime() - lastRenderRequestTimestamp.getTime() < thresMs) {
+    console.log(`Skipped browser recycle, renderer used within ${thresMs/1000} seconds`);
+    return;
+  }
+
+  // Recycle browser
+  await renderWorker.recycleBrowser();
+}, 5*60*1000); // Run every 5 minutes
+
 /**
  * Koa
  */
@@ -59,6 +73,8 @@ app.use(KoaRoute.get('/health', (ctx: Koa.Context) => {
 
 // Register render route
 app.use(KoaRoute.get('/render', async (ctx: Koa.Context) => {
+  lastRenderRequestTimestamp = new Date();
+
   if (!renderWorker.isReady()) {
     throw new Error('Render worker not ready yet.');
   }
@@ -96,7 +112,7 @@ app.use(KoaRoute.get('/render', async (ctx: Koa.Context) => {
   }
 
   // Render url
-    const renderResult = await renderWorker.render(url, isMobile);
+  const renderResult = await renderWorker.render(url, isMobile);
 
   // Add result headers, status code and content
   renderResult.headers.forEach((v: string, k: string) => ctx.set(k, v));
